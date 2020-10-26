@@ -1,0 +1,40 @@
+library(ggplot2)
+library(plyr)
+library(dplyr) 
+library(naniar)
+mydata <- read.csv("C:/Users/liuyf/Documents/adult.csv", header=TRUE)
+########## basic exploring of the data
+summary(mydata) #provide basic descriptive statistics and frequencies
+str(mydata) #provides the structure of the dataset
+names(mydata) # lists variables in the dataset
+########## delete variables based on analysis
+mydata <- subset(mydata,select=-c(education, fnlwgt, relationship))
+########## missing data exploration
+mydata[mydata=="?"] <- NA
+rowSums(is.na(mydata)) # number of missing per row
+colSums(is.na(mydata)) # number of missing per column/variable
+sum(is.na(mydata))
+gg_miss_var(mydata,show_pct = TRUE)
+ggplot(mydata,aes(x=income,y=occupation))+geom_miss_point()
+########## create a new dataset without missing data
+mydata1 <- na.omit(mydata)
+########## recode categorial variables 
+mydata1$workclasscode <-as.numeric(factor(mydata1$workclass))
+mydata1$marital.statuscode <-as.numeric(factor(mydata1$marital.status))
+mydata1$occupationcode <-as.numeric(factor(mydata1$occupation))
+mydata1$racecode <-as.numeric(factor(mydata1$race))
+mydata1$sexcode <-as.numeric(factor(mydata1$sex))
+mydata1$native.countrycode <-as.numeric(factor(mydata1$native.country))
+mydata1$incomecode <-as.numeric(factor(mydata1$income))
+write.csv(mydata1,file="tidydata.csv")
+########## income indistribution
+ggplot(mydata1)+aes(x=age,group=income,fill=income)+geom_histogram(binwidth=1,color="black")
+ggplot(data=mydata1)+geom_count(mapping=aes(x=occupation,y=income))
+ggplot(data=mydata1,mapping=aes(x=education.num,y=..density..))+geom_freqpoly(mapping=aes(color=income,binwidth=500))
+ggplot(mydata1,aes(workclass,income))+geom_jitter(aes(color=workclass),size=0.5)
+########## collreation 
+mydata1 %>% 
+select_if(is.numeric) %>%
+cor() %>%
+heatmap()
+ggcorr(mydata1,label=TRUE)
